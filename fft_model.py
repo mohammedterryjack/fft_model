@@ -9,13 +9,18 @@ class FFTmodel:
     to model any function
     and make predictions
     """
-    def __init__(self, number_of_harmonics:int=10) -> None:
+    def __init__(self, number_of_harmonics:int=5) -> None:
         self.number_of_harmonics = 1+ 2*number_of_harmonics 
 
-    def predict(self, data:ndarray, forecast_size:int=3) -> ndarray:
+    def predict(self, data:ndarray, forecast_size:int=10) -> ndarray:
         frequencies = fftfreq(data.size)
         data_adjusted, unadjustment = self.adjust(data, forecast_size)    
         coefficients=fft(data_adjusted)
+        indexes = sorted(
+            range(data.size),
+            key=lambda index:abs(coefficients[index]), 
+            reverse=True
+        )
         reconstructed_data_adjusted = sum(map(
             lambda index: self.construct_wave(
                 coefficient=coefficients[index],
@@ -23,7 +28,7 @@ class FFTmodel:
                 size=data.size,
                 forecast_size=forecast_size
             ),
-            range(min(data.size,self.number_of_harmonics)),
+            indexes[:self.number_of_harmonics],
         ))
         return reconstructed_data_adjusted + unadjustment
 
